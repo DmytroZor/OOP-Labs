@@ -1,27 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-abstract class Game
-{
-    public abstract int CalculatePoints(int result);
-}
-
-class StandardGame : Game
-{
-    public override int CalculatePoints(int result)
-    {
-        return result * 10; // Стандартний розрахунок балів
-    }
-}
-
-class TrainingGame : Game
-{
-    public override int CalculatePoints(int result)
-    {
-        return 0; // Нульовий розрахунок балів, оскільки тренувальний режим
-    }
-}
-
-abstract class GameAccount
+// Абстрактний клас GameAccount
+public abstract class GameAccount
 {
     public string PlayerName { get; set; }
     public int Rating { get; set; }
@@ -29,91 +11,40 @@ abstract class GameAccount
     public int WinCount { get; private set; }
     public int LoseCount { get; private set; }
     public int DrawCount { get; private set; }
-    protected Game selectedGame;
 
-    public GameAccount(string playerName, int rating, Game selectedGame)
+    public GameAccount(string playerName, int rating)
     {
         if (rating < 1)
             throw new ArgumentException("Rating cannot be less than 1.");
         PlayerName = playerName;
         Rating = rating;
-        this.selectedGame = selectedGame;
     }
 
     public void PlayGame(GameAccount opponent)
     {
-        if (opponent.Rating < 1)
-            throw new ArgumentException("Opponent's rating cannot be less than 1.");
+        GamesCount++;
+        opponent.GamesCount++;
 
-        Console.WriteLine("Welcome to Rock, Paper, Scissors!");
-        Console.WriteLine($"Enter your move, {PlayerName}:");
+        int playerChoice = GetPlayerChoice();
+        int opponentChoice = new Random().Next(1, 4);
 
-        while (true)
-        {
-            GamesCount++;
-            Random random = new Random();
-            int playerChoice;
-            int opponentChoice = random.Next(1, 4); // 1 for Rock, 2 for Paper, 3 for Scissors
+        Console.WriteLine($"{PlayerName} chose {GetMoveName(playerChoice)}");
+        Console.WriteLine($"{opponent.PlayerName} chose {GetMoveName(opponentChoice)}");
 
-            Console.WriteLine("Choose your move:");
-            Console.WriteLine("1. Rock");
-            Console.WriteLine("2. Paper");
-            Console.WriteLine("3. Scissors");
-            Console.WriteLine("0. Quit");
-
-            while (true)
-            {
-                if (int.TryParse(Console.ReadLine(), out playerChoice) && (playerChoice >= 0 && playerChoice <= 3))
-                {
-                    break;
-                }
-                Console.WriteLine("Invalid input. Please enter 0, 1, 2, or 3.");
-            }
-
-            if (playerChoice == 0)
-            {
-                Console.WriteLine("You quit the game.");
-                break;
-            }
-
-            string playerMove = GetMoveName(playerChoice);
-            string opponentMove = GetMoveName(opponentChoice);
-
-            Console.WriteLine($"{PlayerName} chose {playerMove}");
-            Console.WriteLine($"{opponent.PlayerName} chose {opponentMove}");
-
-            int result = DetermineWinner(playerChoice, opponentChoice);
-
-            if (result == 0)
-            {
-                Console.WriteLine("It's a draw!");
-                DrawCount++;
-                opponent.DrawCount++;
-            }
-            else if (result == 1)
-            {
-                Console.WriteLine($"{PlayerName} wins the game!");
-                WinCount++;
-                opponent.LoseCount++;
-                Rating += CalculatePoints(1);
-                opponent.Rating += CalculatePoints(-1);
-            }
-            else
-            {
-                Console.WriteLine($"{opponent.PlayerName} wins the game!");
-                LoseCount++;
-                opponent.WinCount++;
-                Rating += CalculatePoints(-1);
-                opponent.Rating += CalculatePoints(1);
-            }
-        }
-
-        opponent.GamesCount = GamesCount;
+        int result = DetermineWinner(playerChoice, opponentChoice);
+        ProcessGameResult(opponent, result);
     }
-    //Нужно для того что бы возвращать очки независимо от того какой типо аккаунт выбирает игрок(не забыть!!!)
-    protected virtual int CalculatePoints(int result)
+
+    protected virtual int GetPlayerChoice()
     {
-        return selectedGame.CalculatePoints(result);
+        Console.WriteLine($"{PlayerName}, choose your move:");
+        Console.WriteLine("1. Rock\n2. Paper\n3. Scissors\n0. Quit");
+        int choice;
+        while (!int.TryParse(Console.ReadLine(), out choice) || choice < 0 || choice > 3)
+        {
+            Console.WriteLine("Invalid input. Please enter 0, 1, 2, or 3.");
+        }
+        return choice;
     }
 
     private string GetMoveName(int move)
@@ -130,91 +61,180 @@ abstract class GameAccount
                 return "Unknown";
         }
     }
-    //проверка для победы 
+
     private int DetermineWinner(int playerChoice, int opponentChoice)
     {
-        if (playerChoice == opponentChoice)
-        {
-            return 0; // нічия
-        }
-
-        if ((playerChoice == 1 && opponentChoice == 3) || (playerChoice == 2 && opponentChoice == 1) || (playerChoice == 3 && opponentChoice == 2))
-        {
-            return 1; // перемога
-        }
-
-        return -1; // поразка
+        if (playerChoice == opponentChoice) return 0;
+        if ((playerChoice == 1 && opponentChoice == 3) || (playerChoice == 2 && opponentChoice == 1) || (playerChoice == 3 && opponentChoice == 2)) return 1;
+        return -1;
     }
-    //Вивід статистики
+
+    private void ProcessGameResult(GameAccount opponent, int result)
+    {
+        switch (result)
+        {
+            case 0:
+                Console.WriteLine("It's a draw!");
+                DrawCount++;
+                opponent.DrawCount++;
+                break;
+            case 1:
+                Console.WriteLine($"{PlayerName} wins!");
+                WinCount++;
+                opponent.LoseCount++;
+                break;
+            case -1:
+                Console.WriteLine($"{opponent.PlayerName} wins!");
+                LoseCount++;
+                opponent.WinCount++;
+                break;
+        }
+    }
+
     public void GetStats()
     {
         Console.WriteLine($"{PlayerName}'s Stats:");
-        Console.WriteLine($"Games Played: {GamesCount}");
-        Console.WriteLine($"Games Won: {WinCount}");
-        Console.WriteLine($"Games Lost: {LoseCount}");
-        Console.WriteLine($"Games Drawn: {DrawCount}");
-        Console.WriteLine($"Current Rating: {Rating}");
-        Console.WriteLine();
+        Console.WriteLine($"Games Played: {GamesCount}, Wins: {WinCount}, Losses: {LoseCount}, Draws: {DrawCount}, Rating: {Rating}");
     }
 }
-//різні види акаутів //base для визова конструктора базового класса(не забыть!!!)
-class StandardGameAccount : GameAccount //дефолт як і просто якщо б нічого не було
+
+class StandardGameAccount : GameAccount
 {
-    public StandardGameAccount(string playerName, int rating) : base(playerName, rating, new StandardGame()) { }
+    public StandardGameAccount(string playerName, int rating) : base(playerName, rating) { }
 }
 
-class TrainingGameAccount : GameAccount //тренувальна гра(рейтинг не змінюється) працює через класс game і його нащадків
+class TrainingGameAccount : GameAccount
 {
-    public TrainingGameAccount(string playerName, int rating) : base(playerName, rating, new TrainingGame()) { }
+    public TrainingGameAccount(string playerName, int rating) : base(playerName, rating) { }
+}
+
+public interface IGameAccountRepository
+{
+    void CreateAccount(GameAccount account);
+    GameAccount ReadAccount(string playerName);
+    void UpdateAccount(GameAccount account);
+    void DeleteAccount(string playerName);
+}
+
+class GameAccountRepository : IGameAccountRepository
+{
+    private readonly DbContext _dbContext;
+
+    public GameAccountRepository(DbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public void CreateAccount(GameAccount account)
+    {
+        _dbContext.GameAccounts.Add(account);
+    }
+
+    public GameAccount ReadAccount(string playerName)
+    {
+        return _dbContext.GameAccounts.FirstOrDefault(a => a.PlayerName == playerName);
+    }
+
+    public void UpdateAccount(GameAccount account)
+    {
+        var existingAccount = ReadAccount(account.PlayerName);
+        if (existingAccount != null)
+        {
+            _dbContext.GameAccounts.Remove(existingAccount);
+            _dbContext.GameAccounts.Add(account);
+        }
+    }
+
+    public void DeleteAccount(string playerName)
+    {
+        var account = ReadAccount(playerName);
+        if (account != null)
+        {
+            _dbContext.GameAccounts.Remove(account);
+        }
+    }
+}
+
+public interface IGameAccountService
+{
+    void CreateAccount(GameAccount account);
+    GameAccount ReadAccount(string playerName);
+    void UpdateAccount(GameAccount account);
+    void DeleteAccount(string playerName);
+}
+
+class GameAccountService : IGameAccountService
+{
+    private readonly IGameAccountRepository _accountRepository;
+
+    public GameAccountService(IGameAccountRepository accountRepository)
+    {
+        _accountRepository = accountRepository;
+    }
+
+    public void CreateAccount(GameAccount account)
+    {
+        _accountRepository.CreateAccount(account);
+    }
+
+    public GameAccount ReadAccount(string playerName)
+    {
+        return _accountRepository.ReadAccount(playerName);
+    }
+
+    public void UpdateAccount(GameAccount account)
+    {
+        _accountRepository.UpdateAccount(account);
+    }
+
+    public void DeleteAccount(string playerName)
+    {
+        _accountRepository.DeleteAccount(playerName);
+    }
+}
+
+class DbContext
+{
+    public List<GameAccount> GameAccounts { get; private set; }
+
+    public DbContext()
+    {
+        GameAccounts = new List<GameAccount>();
+        InitializeData();
+    }
+
+    private void InitializeData()
+    {
+        GameAccounts.Add(new StandardGameAccount("AI_Opponent", 100));
+    }
 }
 
 class Program
 {
     static void Main(string[] args)
     {
+        DbContext dbContext = new DbContext();
+        IGameAccountRepository accountRepository = new GameAccountRepository(dbContext);
+        IGameAccountService accountService = new GameAccountService(accountRepository);
+
         Console.WriteLine("Welcome to Rock, Paper, Scissors!");
         Console.WriteLine("Enter your name:");
-
         string playerName = Console.ReadLine();
         int startingRating = 100;
-        GameAccount player1 = null;
-        GameAccount player2 = new StandardGameAccount("AI Opponent", startingRating);
 
-        Console.WriteLine("Choose your account type:");
-        Console.WriteLine("1. Standard Account (win (+ or -) 10 rating)");
-        Console.WriteLine("2. Training Account (no rating change)");
+        GameAccount player = new StandardGameAccount(playerName, startingRating);
+        accountService.CreateAccount(player);
 
-        while (true)
-        {
-            if (int.TryParse(Console.ReadLine(), out int accountType) && (accountType == 1 || accountType == 2)) //трай парс для конвертации нецелых чисел //out -передча за посиланням(не забыть!!!)
-            {
-                switch (accountType)
-                {
-                    case 1:
-                        player1 = new StandardGameAccount(playerName, startingRating);
-                        break;
-                    case 2:
-                        player1 = new TrainingGameAccount(playerName, startingRating);
-                        break;
-                }
-                break;
-            }
-            Console.WriteLine("Invalid input. Please enter 1 or 2.");
-        }
-
-        Console.WriteLine($"You and AI Opponent both start with a rating of {startingRating}.");
+        GameAccount opponent = accountService.ReadAccount("AI_Opponent");
 
         while (true)
         {
-            player1.PlayGame(player2);
-
-            player1.GetStats();
-            player2.GetStats();
+            player.PlayGame(opponent);
+            player.GetStats();
+            opponent.GetStats();
 
             Console.WriteLine("Do you want to play another round? (Y/N)");
-            string playAgain = Console.ReadLine();
-
-            if (playAgain != "Y" && playAgain != "y")
+            if (Console.ReadLine().Trim().ToUpper() != "Y")
             {
                 Console.WriteLine("Thanks for playing!");
                 break;
