@@ -1,27 +1,37 @@
 ﻿using System;
 
-abstract class Game
+public interface IGame
 {
-    public abstract int CalculatePoints(int result);
+    int CalculatePoints(int result);
 }
 
-class StandardGame : Game
+public interface IPlayable
 {
-    public override int CalculatePoints(int result)
+    void PlayGame(IPlayable opponent);
+}
+
+public interface IStats
+{
+    void GetStats();
+}
+
+class StandardGame : IGame
+{
+    public int CalculatePoints(int result)
     {
-        return result * 10; // Стандартний розрахунок балів
+        return result * 10;
     }
 }
 
-class TrainingGame : Game
+class TrainingGame : IGame
 {
-    public override int CalculatePoints(int result)
+    public int CalculatePoints(int result)
     {
-        return 0; // Нульовий розрахунок балів, оскільки тренувальний режим
+        return 0;
     }
 }
 
-abstract class GameAccount
+class GameAccount : IPlayable, IStats
 {
     public string PlayerName { get; set; }
     public int Rating { get; set; }
@@ -29,9 +39,9 @@ abstract class GameAccount
     public int WinCount { get; private set; }
     public int LoseCount { get; private set; }
     public int DrawCount { get; private set; }
-    protected Game selectedGame;
+    protected IGame selectedGame;
 
-    public GameAccount(string playerName, int rating, Game selectedGame)
+    public GameAccount(string playerName, int rating, IGame selectedGame)
     {
         if (rating < 1)
             throw new ArgumentException("Rating cannot be less than 1.");
@@ -40,20 +50,16 @@ abstract class GameAccount
         this.selectedGame = selectedGame;
     }
 
-    public void PlayGame(GameAccount opponent)
+    public void PlayGame(IPlayable opponent)
     {
-        if (opponent.Rating < 1)
-            throw new ArgumentException("Opponent's rating cannot be less than 1.");
-
         Console.WriteLine("Welcome to Rock, Paper, Scissors!");
         Console.WriteLine($"Enter your move, {PlayerName}:");
 
         while (true)
         {
-            GamesCount++;
             Random random = new Random();
             int playerChoice;
-            int opponentChoice = random.Next(1, 4); // 1 for Rock, 2 for Paper, 3 for Scissors
+            int opponentChoice = random.Next(1, 4);
 
             Console.WriteLine("Choose your move:");
             Console.WriteLine("1. Rock");
@@ -76,11 +82,13 @@ abstract class GameAccount
                 break;
             }
 
+            GamesCount++; // Перенесено в цей рядок, після перевірки виходу з гри
+
             string playerMove = GetMoveName(playerChoice);
             string opponentMove = GetMoveName(opponentChoice);
 
             Console.WriteLine($"{PlayerName} chose {playerMove}");
-            Console.WriteLine($"{opponent.PlayerName} chose {opponentMove}");
+            Console.WriteLine($"{((GameAccount)opponent).PlayerName} chose {opponentMove}");
 
             int result = DetermineWinner(playerChoice, opponentChoice);
 
@@ -88,30 +96,30 @@ abstract class GameAccount
             {
                 Console.WriteLine("It's a draw!");
                 DrawCount++;
-                opponent.DrawCount++;
+                ((GameAccount)opponent).DrawCount++;
             }
             else if (result == 1)
             {
                 Console.WriteLine($"{PlayerName} wins the game!");
                 WinCount++;
-                opponent.LoseCount++;
+                ((GameAccount)opponent).LoseCount++;
                 Rating += CalculatePoints(1);
-                opponent.Rating += CalculatePoints(-1);
+                ((GameAccount)opponent).Rating += CalculatePoints(-1);
             }
             else
             {
-                Console.WriteLine($"{opponent.PlayerName} wins the game!");
+                Console.WriteLine($"{((GameAccount)opponent).PlayerName} wins the game!");
                 LoseCount++;
-                opponent.WinCount++;
+                ((GameAccount)opponent).WinCount++;
                 Rating += CalculatePoints(-1);
-                opponent.Rating += CalculatePoints(1);
+                ((GameAccount)opponent).Rating += CalculatePoints(1);
             }
         }
 
-        opponent.GamesCount = GamesCount;
+        ((GameAccount)opponent).GamesCount = GamesCount;
     }
-    //Нужно для того что бы возвращать очки независимо от того какой типо аккаунт выбирает игрок(не забыть!!!)
-    protected virtual int CalculatePoints(int result)
+
+    private int CalculatePoints(int result)
     {
         return selectedGame.CalculatePoints(result);
     }
@@ -130,22 +138,22 @@ abstract class GameAccount
                 return "Unknown";
         }
     }
-    //проверка для победы 
+
     private int DetermineWinner(int playerChoice, int opponentChoice)
     {
         if (playerChoice == opponentChoice)
         {
-            return 0; // нічия
+            return 0;
         }
 
         if ((playerChoice == 1 && opponentChoice == 3) || (playerChoice == 2 && opponentChoice == 1) || (playerChoice == 3 && opponentChoice == 2))
         {
-            return 1; // перемога
+            return 1;
         }
 
-        return -1; // поразка
+        return -1;
     }
-    //Вивід статистики
+
     public void GetStats()
     {
         Console.WriteLine($"{PlayerName}'s Stats:");
@@ -157,16 +165,6 @@ abstract class GameAccount
         Console.WriteLine();
     }
 }
-//різні види акаутів //base для визова конструктора базового класса(не забыть!!!)
-class StandardGameAccount : GameAccount //дефолт як і просто якщо б нічого не було
-{
-    public StandardGameAccount(string playerName, int rating) : base(playerName, rating, new StandardGame()) { }
-}
-
-class TrainingGameAccount : GameAccount //тренувальна гра(рейтинг не змінюється) працює через класс game і його нащадків
-{
-    public TrainingGameAccount(string playerName, int rating) : base(playerName, rating, new TrainingGame()) { }
-}
 
 class Program
 {
@@ -177,8 +175,8 @@ class Program
 
         string playerName = Console.ReadLine();
         int startingRating = 100;
-        GameAccount player1 = null;
-        GameAccount player2 = new StandardGameAccount("AI Opponent", startingRating);
+        IPlayable player1 = null;
+        IPlayable player2 = new GameAccount("AI Opponent", startingRating, new StandardGame());
 
         Console.WriteLine("Choose your account type:");
         Console.WriteLine("1. Standard Account (win (+ or -) 10 rating)");
@@ -186,21 +184,21 @@ class Program
 
         while (true)
         {
-            if (int.TryParse(Console.ReadLine(), out int accountType) && (accountType == 1 || accountType == 2)) //трай парс для конвертации нецелых чисел //out -передча за посиланням(не забыть!!!)
+            if (int.TryParse(Console.ReadLine(), out int accountType) && (accountType == 1 || accountType == 2))
             {
-                switch (accountType)
+                if (accountType == 1)
                 {
-                    case 1:
-                        player1 = new StandardGameAccount(playerName, startingRating);
-                        break;
-                    case 2:
-                        player1 = new TrainingGameAccount(playerName, startingRating);
-                        break;
+                    player1 = new GameAccount(playerName, startingRating, new StandardGame());
+                }
+                else
+                {
+                    player1 = new GameAccount(playerName, startingRating, new TrainingGame());
                 }
                 break;
             }
             Console.WriteLine("Invalid input. Please enter 1 or 2.");
         }
+
 
         Console.WriteLine($"You and AI Opponent both start with a rating of {startingRating}.");
 
@@ -208,8 +206,8 @@ class Program
         {
             player1.PlayGame(player2);
 
-            player1.GetStats();
-            player2.GetStats();
+            ((GameAccount)player1).GetStats();
+            ((GameAccount)player2).GetStats();
 
             Console.WriteLine("Do you want to play another round? (Y/N)");
             string playAgain = Console.ReadLine();
