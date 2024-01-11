@@ -43,6 +43,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GameAccount.cs" />
+    <Compile Include="TrainingGameFactory.cs" />
+    <Compile Include="StandardGameFactory.cs" />
+    <Compile Include="Interface\IGameFactory.cs" />
+    <Compile Include="TrainingGame.cs" />
+    <Compile Include="StandardGame.cs" />
+    <Compile Include="Interface\IStats.cs" />
+    <Compile Include="Interface\IPlayable.cs" />
+    <Compile Include="Interface\IGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
