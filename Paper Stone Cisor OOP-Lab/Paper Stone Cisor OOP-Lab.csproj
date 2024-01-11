@@ -43,6 +43,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PlayGameCommand.cs" />
+    <Compile Include="ShowPlayerStatsCommand.cs" />
+    <Compile Include="AddPlayerCommand.cs" />
+    <Compile Include="DisplayPlayersCommand.cs" />
+    <Compile Include="interface\IGameCommand.cs" />
+    <Compile Include="DbContext.cs" />
+    <Compile Include="GameAccountService.cs" />
+    <Compile Include="interface\IGameAccountService.cs" />
+    <Compile Include="GameAccountRepository.cs" />
+    <Compile Include="interface\IGameAccountRepository.cs" />
+    <Compile Include="TrainingGameAccount.cs" />
+    <Compile Include="StandardGameAccount.cs" />
+    <Compile Include="GameAccount.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
