@@ -24,9 +24,9 @@ namespace Paper_Stone_Cisor_OOP_Lab
             }
         }
 
-        public void DisplayCommandInfo()
+        public string DisplayCommandInfo()
         {
-            Console.WriteLine("Displays all players.");
+            return "Display all players";
         }
     }
 }

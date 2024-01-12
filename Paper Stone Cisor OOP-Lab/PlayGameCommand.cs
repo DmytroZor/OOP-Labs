@@ -38,9 +38,9 @@ namespace Paper_Stone_Cisor_OOP_Lab
             }
         }
 
-        public void DisplayCommandInfo()
+        public string DisplayCommandInfo()
         {
-            Console.WriteLine($"Plays {_numberOfGames} games between two players.");
+            return ($"Plays {_numberOfGames} games between two players.");
         }
     }
 

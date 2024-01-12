@@ -9,6 +9,6 @@ namespace Paper_Stone_Cisor_OOP_Lab
     public interface IGameCommand
     {
         void Execute();
-        void DisplayCommandInfo();
+        string DisplayCommandInfo();
     }
 }

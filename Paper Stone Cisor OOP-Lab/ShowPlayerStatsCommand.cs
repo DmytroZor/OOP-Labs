@@ -30,9 +30,9 @@ namespace Paper_Stone_Cisor_OOP_Lab
             }
         }
 
-        public void DisplayCommandInfo()
+        public string DisplayCommandInfo()
         {
-            Console.WriteLine("Displays statistics for a specific player.");
+            return ("Displays statistics for a specific player.");
         }
     }
 }

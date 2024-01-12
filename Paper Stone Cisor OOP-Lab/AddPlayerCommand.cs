@@ -27,9 +27,9 @@ namespace Paper_Stone_Cisor_OOP_Lab
             Console.WriteLine($"Player {_playerName} added successfully with rating {_rating}.");
         }
 
-        public void DisplayCommandInfo()
+        public string DisplayCommandInfo()
         {
-            Console.WriteLine("Adds a new player.");
+            return "Display all players";
         }
     }
 }
